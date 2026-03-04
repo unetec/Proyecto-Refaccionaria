@@ -27,5 +27,4 @@ sudo apt install -y nodejs npm
 
 sudo npm install -g typescript   
 
-sudo npm install -g vite   
 
