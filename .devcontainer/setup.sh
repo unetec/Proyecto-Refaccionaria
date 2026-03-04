@@ -23,7 +23,11 @@ echo "--- Instalación de Rust completada ---"
 
 sudo apt update
 
-sudo apt install -y nodejs npm
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.4/install.sh | bashCopied!   
+
+source ~/.bashrc  # or ~/.zshrc if using zsh   
+
+nvm install node 
 
 sudo npm install -g typescript   
 
