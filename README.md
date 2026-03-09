@@ -1,86 +1,174 @@
-# Primeros pasos en Solana
-![Banner](./images/SolanaBanner.jpg)
-Solana es una blockchain de capa 1, es decir, cuenta con su propia infraestructura y no depende de otras blockchains para funcionar. Se encuentra orientada al alto rendimiento, y fue creada para soportar aplicaciones descentralizadas a gran escala con costos mínimos y confirmaciones casi inmediatas. Su diseño prioriza la eficiencia en la ejecución y la paralelización de transacciones.
+🛠️ REFAX — Refaccionaria Descentralizada en Solana
+Una refaccionaria minimalista y completamente on-chain para gestionar inventario de autopartes utilizando Program Derived Addresses (PDAs) sobre Solana.
 
-Rust es el lenguaje principal para desarrollar programas en Solana. A través de él se implementa la lógica on-chain utilizando el modelo de cuentas y programas de la red, permitiendo construir contratos inteligentes seguros, eficientes y altamente optimizables.
+🔧 Descripción General
+REFAX es un smart contract desarrollado con Anchor sobre la blockchain de Solana que implementa un sistema CRUD descentralizado para administrar refacciones directamente en la red.
 
-Puedes comenzar dándole Fork a este repositorio (abajo te explicamos como 👇)
+Cada refacción se almacena en su propia cuenta y la refaccionaria mantiene un índice de PDAs, permitiendo gestionar inventario de manera transparente y verificable.
 
-Asegúrate de clonar este repositorio a tu cuenta usando el botón **`Fork`**.
+Las refacciones se modelan como cuentas PDA individuales, lo que garantiza:
 
-![fork](./images/fork.png)
+Integridad y trazabilidad de los datos en cadena
+​
 
-* Puedes renombrar el repositorio a lo que sea que se ajuste con tu proyecto.
+Propiedad verificable ligada a la wallet del dueño
+​
 
-## Solana Playground
-Solana Playground es un entorno de desarrollo online que permite escribir, compilar, desplegar y probar programas de Solana directamente desde el navegador, sin necesidad de instalar herramientas locales como Rust, Solana CLI o Anchor.
+Direcciones determinísticas basadas en seeds (semillas)
+​
 
-![Playground](./images/playground.png)
+Uso eficiente del almacenamiento al poder cerrar cuentas y recuperar renta
+​
 
-Para abrir el **Playground** solo es necesario dar clic 👉 [Aquí](https://beta.solpg.io)
+🧩 Características Principales
+🏪 Registro de Refaccionaria
+El programa permite crear una refaccionaria personalizada por wallet, identificada por un nombre:
 
-## Configuración del entorno
+Nombre de la refaccionaria (string limitado a 60 caracteres)
 
-Primero conectaremos el entorno con la devnet, lo que tambien procederá a la creación de una wallet. Para eso daremos clic en donde dice **Not Conected**:
+Propietario (wallet creadora)
 
-![playground1](./images/playground1.png)
+Lista de PDAs de refacciones asociadas
 
-Saldrá la siguiente ventana donde daremos en el botón **Continue**:
+Cada refaccionaria se almacena en una PDA derivada de:
 
-![wallet](./images/wallet.png)
+rust
+["refaccionaria", nombre_refaccionaria, owner_pubkey]
+Estas PDAs se derivan de seeds y el program_id, lo que permite recrear las direcciones desde el cliente sin necesidad de claves privadas.
+​
 
-Como resultado se mostrará la siguiente información:
+🔩 Gestión de Refacciones
+Cada refacción se almacena como una cuenta independiente con la siguiente información:
 
-![status](./images/status.png)
+nombre de la refacción
 
-* En verde: el estado de la conexión y el entorno al que se encuentra conectado
+automovil (vehículo al que pertenece)
 
-* En amarillo: la la dirección de la wallet conectada
+marca
 
-* En azul: la cantidad de tokens en la wallet
+modelo
 
-> ℹ️ ¿Quieres ver el ejemplo de un "Hola Mundo" en Solana?. Da clic aquí: 👉 [Ver Ejemplo](./build-deploy/README.md)
+año (u16)
 
-> ℹ️ ¿Cuentas con una Wallet de [Phantom](https://phantom.com/) que deseas importar?, Da clic aquí para ver como hacerlo: 
+precio (u64, en lamports)
 
-👉 [Como Importar una Wallet](./import-key-a-playground/README.md)
+disponible (bool)
 
-## ¿Listo para empezar?
+refaccionaria (nombre de la refaccionaria a la que pertenece)
 
-El primer paso es hacer `fork` al repositorio. Ya con el repositorio en tu cuenta lo siguiente que debes hacer es entrar a la carpeta `proyecto` y obtener el `permalink`:
+El programa permite:
 
-![permalink](./images/permalink.png)
+Agregar nuevas refacciones al inventario de una refaccionaria
 
-El cual uniremos con el siguiente enlace en nuestro navegador de preferencia:
+Alternar el estado de disponibilidad (por ejemplo, en existencia / agotado)
 
-```url
-https://beta.solpg.io/
-```
+Eliminar refacciones, liberando su cuenta on-chain
 
-Lo que nos dará algo parecido a:
+Cada refacción se almacena en una PDA derivada de:
 
-![url](./images/url.png)
+rust
+["refaccion", nombre_refaccion, owner_pubkey]
+🔄 Operaciones Seguras
+Todas las operaciones críticas validan que el owner de la refaccionaria sea quien firma la transacción.
 
-Al pulsar enter seremos enviados al `Solana Playground` con nuestro proyecto abierto:
+De esta forma, solo el dueño puede:
 
-![pg](./images/pg.png)
+Agregar refacciones a su refaccionaria
 
-Para guardarlo solo damos clic en el boton `import` y asignamos un nombre:
+Modificar el estado de disponibilidad
 
-![import](./images/import.png)
+Eliminar refacciones existentes
 
-## ¿Como actualizo mi repositorio?
+Las validaciones se realizan con macros de Anchor (require! y enums de error personalizados), siguiendo buenas prácticas de seguridad en programas Solana.
+​
 
-Una vez que realices cambios o termines tu proyecto, es necesario que **copies todo el código**, ya con el código en el portapapeles nos dirigimos nuevamente a la carpeta proyecto de tu repositorio de github **donde se obtuvo el `permalink`**, donde entraremos al carpeta `src` y al archivo `lib.rs`:
+🏛️ Arquitectura del Programa
+📦 Modelo de Datos
+El contrato define dos cuentas principales:
 
-![edit](./images/edit.png)
+rust
+Refaccionaria {
+    owner: Pubkey,
+    n_refaccionaria: String,
+    refacciones: Vec<Pubkey>,
+}
 
-En `lib.rs` presionaremos el ícono en forma de lapiz (esquina superior derecha de la imagen 👆)
+Refaccion {
+    refaccionaria: String,
+    nombre: String,
+    automovil: String,
+    marca: String,
+    modelo: String,
+    año: u16,
+    precio: u64,
+    disponible: bool,
+}
+La refaccionaria actúa como índice de refacciones (vector de PDAs), mientras que cada refacción almacena su información detallada.
+​
 
-Nuevamente seleccionamos todo el código pero ahora presionamos `ctrl + v` para pegar el código del `Playground`. Ya realizados los cambios presionamos el botón `Commit changes`:
+🧭 Contextos
+El programa utiliza contextos Anchor para encapsular las cuentas requeridas en cada instrucción:
 
-![commit](./images/commit.png)
+rust
+NuevaRefaccionaria
+NuevaRefaccion
+ModificarRefaccion
+EliminarRefaccion
+NuevaRefaccionaria: inicializa una nueva cuenta PDA de refaccionaria.
 
-Nos aparecerá un menú de confirmación donde nuevamente presionamos el botón `Commit changes`:
+NuevaRefaccion: crea una nueva refacción y la vincula a una refaccionaria.
 
-![commit2](./images/commit2.png)
+ModificarRefaccion: alterna el estado de disponibilidad.
+
+EliminarRefaccion: remueve la refacción de la lista y cierra su cuenta, devolviendo la renta al owner.
+
+🧱 Diseño Basado en PDAs
+El sistema aprovecha Program Derived Addresses para modelar refaccionarias y refacciones:
+​
+
+Direcciones determinísticas a partir de seeds ("refaccionaria", "refaccion", nombre, owner_pubkey)
+
+No requieren clave privada; solo el programa puede firmar sobre ellas mediante invoke_signed
+​
+
+Evitan el uso de índices globales centralizados
+
+Facilitan el escalado del inventario, ya que cada refacción vive en su propia cuenta
+
+Esta arquitectura se alinea con los patrones recomendados para dApps CRUD en Solana usando Anchor.
+
+🔐 Seguridad y Buenas Prácticas
+El contrato implementa varias medidas:
+
+Validación de propietario en todas las operaciones de escritura sobre el inventario
+
+Verificación de pertenencia: una refacción solo puede eliminarse desde su refaccionaria correspondiente
+
+Errores explícitos mediante #[error_code] para mejorar la depuración en el cliente Anchor
+​
+
+Cierre de cuentas (close = owner) para recuperar renta y liberar espacio en la red cuando se eliminan refacciones
+​
+
+⚡ Eficiencia y Costos
+Al almacenar cada refacción en su propia PDA y mantener solo un vector de direcciones en la refaccionaria, el sistema evita estructuras globales pesadas.
+​
+Esto permite:
+
+Menor uso de almacenamiento a nivel de cada cuenta
+
+Lecturas específicas de refacciones desde el cliente sin recorrer listas globales
+
+Recuperación de renta al eliminar refacciones, haciendo el sistema más rent-efficient
+​
+
+🎯 Objetivo del Proyecto
+REFAX busca demostrar cómo construir una refaccionaria descentralizada limpia, segura y escalable en Solana utilizando Anchor y PDAs.
+
+El proyecto funciona como:
+
+Ejemplo educativo de CRUD on-chain aplicado a inventarios de autopartes
+
+Base para sistemas de gestión de refaccionarias y stocks en Web3
+
+Demostración práctica del uso de PDAs e índices on-chain para controlar inventarios distribuidos en Solana
